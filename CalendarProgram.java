@@ -1,175 +1,167 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package eksamenprojekt.kalender;
 
 import javax.swing.*;
-import javax.swing.event.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
-
+// Kode er fra linje 10-209 er delvist inspireret fra https://javahungry.blogspot.com/2013/06/calendar-implementation-gui-based.html.
+//Koden er blevet modificeret således den passer vores behov og projekt
 public class CalendarProgram{
-    static JLabel lblMonth, lblYear;
-    static JButton btnPrev, btnNext;
-    static JTable tblCalendar;
-    static JComboBox cmbYear;
+    static JLabel lblMåned, lblÅr;
+    static JButton btnFør, btnNæste;
+    static JTable tblKalender;
+    static JComboBox cmbÅr;
     static JFrame frmMain;
     static Container pane;
-    static DefaultTableModel mtblCalendar; //Table model
-    static JScrollPane stblCalendar; //The scrollpane
-    static JPanel pnlCalendar;
-    static int realYear, realMonth, realDay, currentYear, currentMonth;
+    static DefaultTableModel mtbKalender; //Table model
+    static JScrollPane stblKalender; //
+    static JPanel pnlKalender;
+    static int rigtigÅr, rigtigMåned, rigtigDag, nuværendeÅr, nuværendeMåned;
+    private static DefaultTableModel mtblKalender;
+    private static JScrollPane stblKaldener;
     
     public static void main (String args[]){
-        //Look and feel
         try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}
-        catch (ClassNotFoundException e) {}
-        catch (InstantiationException e) {}
-        catch (IllegalAccessException e) {}
-        catch (UnsupportedLookAndFeelException e) {}
+        catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {}
         
         
-        //Prepare frame
-        frmMain = new JFrame ("Gestionnaire de clients"); //Create frame
-        frmMain.setSize(500, 500); //Set size to 400x400 pixels
-        pane = frmMain.getContentPane(); //Get content pane
-        pane.setLayout(null); //Apply null layout
-        frmMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Close when X is clicked
-        frmMain.setLocationRelativeTo(null); //har vi selv sat ind
+        //forbereder vores vindue
+        frmMain = new JFrame ("Kalender Program"); //vi laver vinduet
+        frmMain.setSize(500, 500); //vi afgører størrelsen af vinduet
+        pane = frmMain.getContentPane();
+        pane.setLayout(null);
+        frmMain.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //gør vi kan lukke programmet når vi trykker kryds
+        frmMain.setLocationRelativeTo(null); //centrere vinduet
         
-        //Create controls
-        lblMonth = new JLabel ("January");
-        lblYear = new JLabel ("Vælg årstal:");
-        cmbYear = new JComboBox();
-        btnPrev = new JButton ("<-");
-        btnNext = new JButton ("->");
-        mtblCalendar = new DefaultTableModel(){public boolean isCellEditable(int rowIndex, int mColIndex){return false;}};
-        tblCalendar = new JTable(mtblCalendar);
-        stblCalendar = new JScrollPane(tblCalendar);
-        pnlCalendar = new JPanel(null);
+        //opretter controls
+        lblMåned = new JLabel ("Januar");
+        lblÅr = new JLabel ("Skift År:");
+        cmbÅr = new JComboBox();
+        btnFør = new JButton ("<---");
+        btnNæste = new JButton ("--->");
+        mtblKalender = new DefaultTableModel(){public boolean isCellEditable(int rowIndex, int mColIndex){return false;}};
+        tblKalender = new JTable(mtblKalender);
+        stblKalender = new JScrollPane(tblKalender);
+        pnlKalender = new JPanel(null);
         
-        //Set border
-        pnlCalendar.setBorder(BorderFactory.createTitledBorder("Calendar"));
+        //sætter border
+        pnlKalender.setBorder(BorderFactory.createTitledBorder("Kalender"));
         
-        //Register action listeners
-        btnPrev.addActionListener(new btnPrev_Action());
-        btnNext.addActionListener(new btnNext_Action());
-        cmbYear.addActionListener(new cmbYear_Action());
+       //Register action listeners
+        btnFør.addActionListener(new btnPrev_Action());
+        btnNæste.addActionListener(new btnNext_Action());
+        cmbÅr.addActionListener(new cmbYear_Action());
         
-        //Add controls to pane
-        pane.add(pnlCalendar);
-        pnlCalendar.add(lblMonth);
-        pnlCalendar.add(lblYear);
-        pnlCalendar.add(cmbYear);
-        pnlCalendar.add(btnPrev);
-        pnlCalendar.add(btnNext);
-        pnlCalendar.add(stblCalendar);
+      pane.add(pnlKalender);
+        pnlKalender.add(lblMåned);
+        pnlKalender.add(lblÅr);
+        pnlKalender.add(cmbÅr);
+        pnlKalender.add(btnFør);
+        pnlKalender.add(btnNæste);
+        pnlKalender.add(stblKalender);
         
-        //Set bounds
-        pnlCalendar.setBounds(0, 0, 500, 600);
-        lblMonth.setBounds(160-lblMonth.getPreferredSize().width/2, 25, 100, 25);
-        lblYear.setBounds(10, 305, 80, 20);
-        cmbYear.setBounds(230, 305, 80, 20);
-        btnPrev.setBounds(10, 25, 100, 25);
-        btnNext.setBounds(260, 25, 100, 25);
-        stblCalendar.setBounds(10, 50, 450, 400);
+        //størrelsesforhold på elem´enterne
+        pnlKalender.setBounds(0, 0, 500, 600);
+        lblMåned.setBounds(160-lblMåned.getPreferredSize().width/2, 25, 100, 25);
+        lblÅr.setBounds(10, 305, 80, 20);
+        cmbÅr.setBounds(230, 305, 80, 20);
+        btnFør.setBounds(10, 25, 100, 25);
+        btnNæste.setBounds(360, 25, 100, 25);
+        stblKalender.setBounds(10, 50, 450, 400);
         
-        //Make frame visible
+        //gør vinduet synligt
         frmMain.setResizable(false);
         frmMain.setVisible(true);
         
-        //Get real month/year
-        GregorianCalendar cal = new GregorianCalendar(); //Create calendar
-        realDay = cal.get(GregorianCalendar.DAY_OF_MONTH); //Get day
-        realMonth = cal.get(GregorianCalendar.MONTH); //Get month
-        realYear = cal.get(GregorianCalendar.YEAR); //Get year
-        currentMonth = realMonth; //Match month and year
-        currentYear = realYear;
+        //Få fat i den rigtige date
+        GregorianCalendar cal = new GregorianCalendar(); //erklarer vores kalender
+        rigtigDag = cal.get(GregorianCalendar.DAY_OF_MONTH); //får fat i vores dag
+        rigtigMåned = cal.get(GregorianCalendar.MONTH); //får fat i vores måned
+        rigtigÅr = cal.get(GregorianCalendar.YEAR); //Får fat i vores år
+        nuværendeMåned = rigtigMåned; //får fat i vores nuværrende måned og år
+        nuværendeÅr = rigtigÅr;
         
-        //Add headers
-        String[] headers = {"søn", "man", "tir", "ons", "tor", "fre","lør"}; //All headers
+        //Ugedagene tilføjes
+        String[] headers = {"søn", "man", "tir", "ons", "tor", "fre","lør"};
         for (int i=0; i<7; i++){
-            mtblCalendar.addColumn(headers[i]);
+            mtblKalender.addColumn(headers[i]);
         }
         
-        tblCalendar.getParent().setBackground(tblCalendar.getBackground()); //Set background
+        tblKalender.getParent().setBackground(tblKalender.getBackground()); //Set background
         
-        //No resize/reorder
-        tblCalendar.getTableHeader().setResizingAllowed(false);
-        tblCalendar.getTableHeader().setReorderingAllowed(false);
+    
+        tblKalender.getTableHeader().setResizingAllowed(false);
+        tblKalender.getTableHeader().setReorderingAllowed(false);
         
-        //Single cell selection
-        tblCalendar.setColumnSelectionAllowed(true);
-        tblCalendar.setRowSelectionAllowed(true);
-        tblCalendar.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+ 
+        tblKalender.setColumnSelectionAllowed(true);
+        tblKalender.setRowSelectionAllowed(true);
+        tblKalender.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         //Set row/column count
-        tblCalendar.setRowHeight(38);
-        mtblCalendar.setColumnCount(7);
-        mtblCalendar.setRowCount(6);
+        tblKalender.setRowHeight(38);
+        mtblKalender.setColumnCount(7);
+        mtblKalender.setRowCount(6);
         
         //Populate table
-        for (int i=realYear-100; i<=realYear+100; i++){
-            cmbYear.addItem(String.valueOf(i));
+        for (int i=rigtigÅr-100; i<=rigtigÅr+100; i++){
+            cmbÅr.addItem(String.valueOf(i));
         }
         
         //Refresh calendar
-        refreshCalendar (realMonth, realYear); //Refresh calendar
+        refreshCalendar (rigtigMåned, rigtigÅr); //Refresh calendar
     }
     
-    public static void refreshCalendar(int month, int year){
+    public static void refreshCalendar(int måned, int år){
         //Variables
-        String[] months =  {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-        int nod, som; //Number Of Days, Start Of Month
+        String[] måneder =  {"Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"};
+        int nod, som; //antal af dage, starten på månederne
         
         //Allow/disallow buttons
-        btnPrev.setEnabled(true);
-        btnNext.setEnabled(true);
-        if (month == 0 && year <= realYear-10){btnPrev.setEnabled(false);} //Too early
-        if (month == 11 && year >= realYear+100){btnNext.setEnabled(false);} //Too late
-        lblMonth.setText(months[month]); //Refresh the month label (at the top)
-        lblMonth.setBounds(160-lblMonth.getPreferredSize().width/2, 25, 180, 25); //Re-align label with calendar
-        cmbYear.setSelectedItem(String.valueOf(year)); //Select the correct year in the combo box
+        btnFør.setEnabled(true);
+        btnNæste.setEnabled(true);
+        if (måned == 0 && år <= rigtigÅr-10){btnFør.setEnabled(false);} //Too early
+        if (måned == 11 && år >= rigtigÅr+100){btnNæste.setEnabled(false);} //Too late
+        lblMåned.setText(måneder[måned]); //Refresh the month label (at the top)
+        lblMåned.setBounds(220-lblMåned.getPreferredSize().width/50, 25, 90, 25); //Re-align label with calendar
+        cmbÅr.setSelectedItem(String.valueOf(år)); //Select the correct year in the combo box
         
         //Clear table
         for (int i=0; i<6; i++){
             for (int j=0; j<7; j++){
-                mtblCalendar.setValueAt(null, i, j);
+                mtblKalender.setValueAt(null, i, j);
             }
         }
         
         //Get first day of month and number of days
-        GregorianCalendar cal = new GregorianCalendar(year, month, 1);
+        GregorianCalendar cal = new GregorianCalendar(år, måned, 1);
         nod = cal.getActualMaximum(GregorianCalendar.DAY_OF_MONTH);
         som = cal.get(GregorianCalendar.DAY_OF_WEEK);
         
         //Draw calendar
         for (int i=1; i<=nod; i++){
-            int row = new Integer((i+som-2)/7);
+            int row = (i+som-2)/7;
             int column  =  (i+som-2)%7;
-            mtblCalendar.setValueAt(i, row, column);
+            mtblKalender.setValueAt(i, row, column);
         }
         
-        //Apply renderers
-        tblCalendar.setDefaultRenderer(tblCalendar.getColumnClass(0), new tblCalendarRenderer());
+        tblKalender.setDefaultRenderer(tblKalender.getColumnClass(0), new tblCalendarRenderer());
     }
     
     static class tblCalendarRenderer extends DefaultTableCellRenderer{
+        @Override
         public Component getTableCellRendererComponent (JTable table, Object value, boolean selected, boolean focused, int row, int column){
             super.getTableCellRendererComponent(table, value, selected, focused, row, column);
-            if (column == 0 || column == 6){ //Week-end
+            if (column == 0 || column == 6){ //weekend
                 setBackground(new Color(255, 220, 220));
             }
-            else{ //Week
+            else{ //Uge
                 setBackground(new Color(255, 255, 255));
             }
             if (value != null){
-                if (Integer.parseInt(value.toString()) == realDay && currentMonth == realMonth && currentYear == realYear){ //Today
-                    setBackground(new Color(220, 220, 255));
+                if (Integer.parseInt(value.toString()) == rigtigDag && nuværendeMåned == rigtigMåned && nuværendeÅr == rigtigÅr){ //Idag
+                    setBackground(new Color(200,200,250));
                 }
             }
             setBorder(null);
@@ -179,38 +171,38 @@ public class CalendarProgram{
     }
     
     static class btnPrev_Action implements ActionListener{
-        @Override
+        
         public void actionPerformed (ActionEvent e){
-            if (currentMonth == 0){ //Back one year
-                currentMonth = 11;
-                currentYear -= 1;
+            if (nuværendeMåned == 0){ //et år tibage
+                nuværendeMåned = 11;
+                nuværendeÅr -= 1;
             }
-            else{ //Back one month
-                currentMonth -= 1;
+            else{ //en måned tilbage
+                nuværendeMåned -= 1;
             }
-            refreshCalendar(currentMonth, currentYear);
+            refreshCalendar(nuværendeMåned, nuværendeÅr);
         }
     }
     static class btnNext_Action implements ActionListener{
-        @Override
+        
         public void actionPerformed (ActionEvent e){
-            if (currentMonth == 11){ //Foward one year
-                currentMonth = 0;
-                currentYear += 1;
+            if (nuværendeMåned == 11){ //et år frem
+                nuværendeMåned = 0;
+                nuværendeÅr += 1;
             }
-            else{ //Foward one month
-                currentMonth += 1;
+            else{ //en måned frem
+                nuværendeMåned += 1;
             }
-            refreshCalendar(currentMonth, currentYear);
+            refreshCalendar(nuværendeMåned, nuværendeÅr);
         }
     }
     static class cmbYear_Action implements ActionListener{
-        @Override
+        
         public void actionPerformed (ActionEvent e){
-            if (cmbYear.getSelectedItem() != null){
-                String b = cmbYear.getSelectedItem().toString();
-                currentYear = Integer.parseInt(b);
-                refreshCalendar(currentMonth, currentYear);
+            if (cmbÅr.getSelectedItem() != null){
+                String b = cmbÅr.getSelectedItem().toString();
+                nuværendeÅr = Integer.parseInt(b);
+                refreshCalendar(nuværendeMåned, nuværendeÅr);
             }
         }
     }
